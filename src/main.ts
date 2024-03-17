@@ -1,4 +1,11 @@
-import { Application, Assets, AnimatedSprite, Texture, type SpriteSheetJson, Spritesheet, type SpritesheetData } from "pixi.js";
+import {
+  Application,
+  Assets,
+  AnimatedSprite,
+  Spritesheet,
+  type SpritesheetData,
+} from "pixi.js";
+import { getTexturesByPrefix } from "./utils";
 
 (async () => {
   // Create a new application and resize to window size
@@ -9,16 +16,17 @@ import { Application, Assets, AnimatedSprite, Texture, type SpriteSheetJson, Spr
   document.body.appendChild(app.canvas);
 
   // Preload assets
-  // Load the animation sprite sheet
-  const characterAssets: Spritesheet<SpritesheetData> = await Assets.load("assets/character/001.json");
-  const faceAssets: Spritesheet<SpritesheetData> = await Assets.load("assets/face/001.json");
+  const characterAssets: Spritesheet<SpritesheetData> = await Assets.load(
+    "assets/character/001.json"
+  );
+  const faceAssets: Spritesheet<SpritesheetData> = await Assets.load(
+    "assets/face/001.json"
+  );
 
   // Character
-  const charFrames = []
-  for (let i = 0; i < 4; i++) {
-    charFrames.push(characterAssets.textures[`walk_0_${i}.png`]);
-  }
-  const charAnim = new AnimatedSprite(charFrames);
+  const charAnim = new AnimatedSprite(
+    getTexturesByPrefix(characterAssets, "walk")
+  );
   charAnim.x = app.screen.width / 2;
   charAnim.y = app.screen.height / 2;
   charAnim.anchor.set(0.5);
@@ -26,23 +34,53 @@ import { Application, Assets, AnimatedSprite, Texture, type SpriteSheetJson, Spr
   charAnim.play();
 
   // Face
-  const faceFrames = []
-  for (let i = 0; i < 4; i++) {
-    faceFrames.push(faceAssets.textures[`walk1_${i}.png`]);
-  }
-  const faceAnim = new AnimatedSprite(faceFrames);
+  const faceAnim = new AnimatedSprite(getTexturesByPrefix(faceAssets, "walk"));
   faceAnim.x = app.screen.width / 2;
   faceAnim.y = app.screen.height / 2;
   faceAnim.anchor.set(0.5);
   faceAnim.animationSpeed = 0.075;
   faceAnim.play();
 
+  // Input
+  let gameSelected = true;
+  app.canvas.addEventListener("click", () => {
+    gameSelected = true;
+  });
+
+  document.addEventListener("click", (event) => {
+    if (event.target !== app.canvas) {
+      gameSelected = false;
+    }
+  });
+
+  document.addEventListener(
+    "keydown", // Function to handle the keydown event
+    function onKeyboardDown(event) {
+      event.preventDefault();
+
+      // Implement keyboard logic here
+      if (gameSelected) {
+        if (event.key === "ArrowLeft") {
+          charAnim.x -= 1;
+          faceAnim.x -= 1;
+        }
+        if (event.key === "ArrowRight") {
+          charAnim.x += 1;
+          faceAnim.x += 1;
+        }
+        if (event.key === "ArrowUp") {
+          charAnim.y -= 1;
+          faceAnim.y -= 1;
+        }
+        if (event.key === "ArrowDown") {
+          charAnim.y += 1;
+          faceAnim.y += 1;
+        }
+      }
+    }
+  );
+
+  // Add and remove AnimatedSpriteSheets into the app
   app.stage.addChild(charAnim);
   app.stage.addChild(faceAnim);
-
-  // Animate the rotation
-  //   app.ticker.add(() =>
-  //   {
-  //       anim.rotation += 0.01;
-  //   });
 })();
